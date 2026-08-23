@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 
 /**
  * Etapa 4: control de acceso.
@@ -49,7 +50,9 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/api/**").authenticated())
-            .httpBasic(Customizer.withDefaults());
+            .httpBasic(b -> b.authenticationEntryPoint(apiEntryPoint()))
+            // Entry point explicito: 401 + WWW-Authenticate, nunca un redirect.
+            .exceptionHandling(e -> e.authenticationEntryPoint(apiEntryPoint()));
         return http.build();
     }
 
@@ -61,7 +64,11 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
             .headers(h -> h.frameOptions(f -> f.sameOrigin()))
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/login", "/css/**", "/h2-console/**").permitAll()
+                // /error debe ser publico: cuando la API responde 401 con sendError(),
+                // Tomcat re-despacha internamente a /error. Ese despacho vuelve a pasar
+                // por esta cadena y, si exige autenticacion, sobrescribe el 401 con un
+                // 302 al login. Era la causa real del hallazgo 1 (ver DEPURACION.md).
+                .requestMatchers("/login", "/error", "/css/**", "/h2-console/**").permitAll()
                 .requestMatchers("/cursos/nuevo", "/cursos/guardar", "/cursos/eliminar/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .formLogin(f -> f
@@ -75,5 +82,12 @@ public class SecurityConfig {
             // Pagina propia cuando el rol no alcanza, en vez del error generico
             .exceptionHandling(e -> e.accessDeniedPage("/acceso-denegado"));
         return http.build();
+    }
+
+    /** Entry point de la API: responde 401 con WWW-Authenticate, nunca un redirect. */
+    private BasicAuthenticationEntryPoint apiEntryPoint() {
+        BasicAuthenticationEntryPoint ep = new BasicAuthenticationEntryPoint();
+        ep.setRealmName("SpringEduManager API");
+        return ep;
     }
 }
