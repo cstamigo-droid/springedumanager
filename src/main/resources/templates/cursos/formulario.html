@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Nuevo curso</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Nuevo curso</h2>
+    <form class="tarjeta" th:action="@{/cursos/guardar}" th:object="${curso}" method="post">
+      <label>Codigo <input type="text" th:field="*{codigo}">
+        <span class="error" th:if="${#fields.hasErrors('codigo')}" th:errors="*{codigo}"></span></label>
+      <label>Nombre <input type="text" th:field="*{nombre}">
+        <span class="error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span></label>
+      <label>Horas <input type="number" th:field="*{horas}">
+        <span class="error" th:if="${#fields.hasErrors('horas')}" th:errors="*{horas}"></span></label>
+      <label>Descripcion <textarea th:field="*{descripcion}" rows="3"></textarea></label>
+      <button class="btn" type="submit">Guardar</button>
+      <a class="btn gris" th:href="@{/cursos}">Cancelar</a>
+    </form>
+  </main>
+</body>
+</html>

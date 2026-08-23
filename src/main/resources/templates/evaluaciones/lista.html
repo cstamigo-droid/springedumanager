@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Evaluaciones</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Evaluaciones</h2>
+    <table>
+      <tr><th>Estudiante</th><th>Curso</th><th>Nota</th><th>Fecha</th><th>Estado</th></tr>
+      <tr th:each="ev : ${evaluaciones}">
+        <td th:text="${ev.estudiante.nombre}"></td>
+        <td th:text="${ev.curso.nombre}"></td>
+        <td th:text="${ev.nota}"></td>
+        <td th:text="${ev.fecha}"></td>
+        <td th:text="${ev.aprobada} ? 'Aprobada' : 'Reprobada'"
+            th:style="${ev.aprobada} ? 'color:#256d47' : 'color:#96342b'"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(evaluaciones)}"><td colspan="5">No hay evaluaciones registradas.</td></tr>
+    </table>
+  </main>
+</body>
+</html>

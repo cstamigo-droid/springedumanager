@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+  <header th:fragment="cabecera">
+    <h1>SpringEduManager</h1>
+    <nav>
+      <a th:href="@{/cursos}">Cursos</a>
+      <a th:href="@{/estudiantes}">Estudiantes</a>
+      <a th:href="@{/evaluaciones}">Evaluaciones</a>
+    </nav>
+    <div class="sesion">
+      <span th:text="${#authentication.name}">usuario</span>
+      <span sec:authorize="hasRole('ADMIN')">· ADMIN</span>
+      <span sec:authorize="hasRole('USER')">· USER</span>
+      &nbsp;
+      <form th:action="@{/logout}" method="post" style="display:inline">
+        <button type="submit">Salir</button>
+      </form>
+    </div>
+  </header>
+</body>
+</html>

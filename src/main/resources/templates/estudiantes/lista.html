@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Estudiantes</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Estudiantes</h2>
+    <div th:if="${exito}" class="aviso ok" th:text="${exito}"></div>
+    <div th:if="${error}" class="aviso mal" th:text="${error}"></div>
+    <p><a class="btn" th:href="@{/estudiantes/nuevo}">Nuevo estudiante</a></p>
+    <table>
+      <tr><th>RUT</th><th>Nombre</th><th>Email</th><th>Cursos</th><th></th></tr>
+      <tr th:each="e : ${estudiantes}">
+        <td th:text="${e.rut}"></td>
+        <td th:text="${e.nombre}"></td>
+        <td th:text="${e.email}"></td>
+        <td th:text="${#lists.size(e.cursos)}"></td>
+        <td><a class="btn gris" th:href="@{'/estudiantes/' + ${e.id}}">Ver</a></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(estudiantes)}"><td colspan="5">No hay estudiantes registrados.</td></tr>
+    </table>
+  </main>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Detalle</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2 th:text="${estudiante.nombre}">Estudiante</h2>
+    <div th:if="${exito}" class="aviso ok" th:text="${exito}"></div>
+    <p><b>RUT:</b> <span th:text="${estudiante.rut}"></span> &nbsp;
+       <b>Email:</b> <span th:text="${estudiante.email}"></span></p>
+
+    <h3>Cursos matriculados</h3>
+    <table>
+      <tr><th>Codigo</th><th>Nombre</th><th>Horas</th></tr>
+      <tr th:each="c : ${estudiante.cursos}">
+        <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td><td th:text="${c.horas}"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(estudiante.cursos)}"><td colspan="3">Sin cursos aun.</td></tr>
+    </table>
+
+    <h3>Matricular en un curso</h3>
+    <form class="tarjeta" th:action="@{'/estudiantes/' + ${estudiante.id} + '/matricular'}" method="post">
+      <label>Curso
+        <select name="cursoId">
+          <option th:each="c : ${cursosDisponibles}" th:value="${c.id}" th:text="${c.codigo + ' - ' + c.nombre}"></option>
+        </select>
+      </label>
+      <button class="btn" type="submit">Matricular</button>
+      <a class="btn gris" th:href="@{/estudiantes}">Volver</a>
+    </form>
+  </main>
+</body>
+</html>

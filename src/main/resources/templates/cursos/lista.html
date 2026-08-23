@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head><meta charset="UTF-8"><title>Cursos</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Cursos del bootcamp</h2>
+    <div th:if="${exito}" class="aviso ok" th:text="${exito}"></div>
+    <div th:if="${error}" class="aviso mal" th:text="${error}"></div>
+    <p sec:authorize="hasRole('ADMIN')">
+      <a class="btn" th:href="@{/cursos/nuevo}">Nuevo curso</a>
+    </p>
+    <table>
+      <tr><th>Codigo</th><th>Nombre</th><th>Horas</th><th>Descripcion</th><th sec:authorize="hasRole('ADMIN')">Acciones</th></tr>
+      <tr th:each="c : ${cursos}">
+        <td th:text="${c.codigo}"></td>
+        <td th:text="${c.nombre}"></td>
+        <td th:text="${c.horas}"></td>
+        <td th:text="${c.descripcion}"></td>
+        <td sec:authorize="hasRole('ADMIN')">
+          <a class="btn rojo" th:href="@{'/cursos/eliminar/' + ${c.id}}">Eliminar</a>
+        </td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(cursos)}"><td colspan="5">No hay cursos registrados.</td></tr>
+    </table>
+  </main>
+</body>
+</html>
