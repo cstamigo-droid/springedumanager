@@ -24,24 +24,18 @@ public class EstudianteRestController {
         return servicio.porId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    /** 201 con el estudiante creado; email repetido -> 409 via ApiExceptionHandler. */
     @PostMapping
-    public ResponseEntity<?> crear(@Valid @RequestBody Estudiante estudiante) {
-        try {
-            return ResponseEntity.status(201).body(servicio.guardar(estudiante));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Estudiante> crear(@Valid @RequestBody Estudiante estudiante) {
+        return ResponseEntity.status(201).body(servicio.guardar(estudiante));
     }
 
+    /** 200 actualizado, 404 si no existe, 409 si el email es de otro estudiante. */
     @PutMapping("/{id}")
     public ResponseEntity<Estudiante> actualizar(@PathVariable Long id,
                                                  @Valid @RequestBody Estudiante datos) {
-        return servicio.porId(id).map(e -> {
-            e.setNombre(datos.getNombre());
-            e.setEmail(datos.getEmail());
-            e.setRut(datos.getRut());
-            return ResponseEntity.ok(servicio.guardar(e));
-        }).orElse(ResponseEntity.notFound().build());
+        return servicio.actualizar(id, datos).map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

@@ -31,10 +31,31 @@ public class EstudianteService {
 
     @Transactional
     public Estudiante guardar(Estudiante estudiante) {
-        if (estudiante.getId() == null && repositorio.existsByEmail(estudiante.getEmail())) {
+        boolean emailDeOtro = repositorio.findByEmail(estudiante.getEmail())
+                .map(otro -> !otro.getId().equals(estudiante.getId()))
+                .orElse(false);
+        if (emailDeOtro) {
             throw new IllegalArgumentException("Ya existe un estudiante con el email " + estudiante.getEmail());
         }
         return repositorio.save(estudiante);
+    }
+
+    /** Actualizacion (PUT de la API): verifica el email libre ANTES de modificar la entidad. */
+    @Transactional
+    public Optional<Estudiante> actualizar(Long id, Estudiante datos) {
+        Optional<Estudiante> existente = repositorio.findById(id);
+        if (existente.isEmpty()) return Optional.empty();
+        boolean emailDeOtro = repositorio.findByEmail(datos.getEmail())
+                .map(otro -> !otro.getId().equals(id))
+                .orElse(false);
+        if (emailDeOtro) {
+            throw new IllegalArgumentException("Ya existe un estudiante con el email " + datos.getEmail());
+        }
+        Estudiante e = existente.get();
+        e.setNombre(datos.getNombre());
+        e.setEmail(datos.getEmail());
+        e.setRut(datos.getRut());
+        return Optional.of(repositorio.save(e));
     }
 
     /** Matricula: agrega un curso a la lista del estudiante, sin duplicar. */

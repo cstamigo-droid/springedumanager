@@ -27,24 +27,20 @@ public class CursoRestController {
         return servicio.porId(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    /**
+     * 201 con el curso creado. Si el codigo ya existe, el servicio lanza
+     * IllegalArgumentException y ApiExceptionHandler responde 409 en JSON.
+     */
     @PostMapping
-    public ResponseEntity<?> crear(@Valid @RequestBody Curso curso) {
-        try {
-            return ResponseEntity.status(201).body(servicio.guardar(curso));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Curso> crear(@Valid @RequestBody Curso curso) {
+        return ResponseEntity.status(201).body(servicio.guardar(curso));
     }
 
+    /** 200 con el curso actualizado, 404 si no existe, 409 si el codigo es de otro curso. */
     @PutMapping("/{id}")
     public ResponseEntity<Curso> actualizar(@PathVariable Long id, @Valid @RequestBody Curso datos) {
-        return servicio.porId(id).map(c -> {
-            c.setNombre(datos.getNombre());
-            c.setCodigo(datos.getCodigo());
-            c.setHoras(datos.getHoras());
-            c.setDescripcion(datos.getDescripcion());
-            return ResponseEntity.ok(servicio.guardar(c));
-        }).orElse(ResponseEntity.notFound().build());
+        return servicio.actualizar(id, datos).map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

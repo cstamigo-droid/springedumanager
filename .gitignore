@@ -6,3 +6,5 @@ target/
 .idea/
 *.iml
 *.log
+__pycache__/
+*.bak_*

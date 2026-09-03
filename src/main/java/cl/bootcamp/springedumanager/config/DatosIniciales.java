@@ -2,6 +2,7 @@ package cl.bootcamp.springedumanager.config;
 
 import cl.bootcamp.springedumanager.modelo.*;
 import cl.bootcamp.springedumanager.repositorio.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,10 @@ import org.springframework.stereotype.Component;
 /**
  * Carga inicial: dos usuarios (ADMIN y USER), cursos, estudiantes y evaluaciones,
  * para que la aplicacion se pueda revisar sin tener que cargar datos a mano.
+ *
+ * Etapa 4: los usuarios y sus claves se CONFIGURAN en application.properties
+ * (edumanager.usuarios.*), como pide la Leccion 4. Aqui solo se leen y se
+ * guardan en la base con la clave hasheada en BCrypt.
  */
 @Component
 public class DatosIniciales implements CommandLineRunner {
@@ -18,6 +23,15 @@ public class DatosIniciales implements CommandLineRunner {
     private final EstudianteRepository estudianteRepo;
     private final EvaluacionRepository evaluacionRepo;
     private final PasswordEncoder encoder;
+
+    @Value("${edumanager.usuarios.admin.nombre:admin}")
+    private String adminNombre;
+    @Value("${edumanager.usuarios.admin.clave:admin123}")
+    private String adminClave;
+    @Value("${edumanager.usuarios.estudiante.nombre:estudiante}")
+    private String estudianteNombre;
+    @Value("${edumanager.usuarios.estudiante.clave:est123}")
+    private String estudianteClave;
 
     public DatosIniciales(UsuarioRepository usuarioRepo, CursoRepository cursoRepo,
                           EstudianteRepository estudianteRepo, EvaluacionRepository evaluacionRepo,
@@ -33,8 +47,8 @@ public class DatosIniciales implements CommandLineRunner {
     public void run(String... args) {
         if (usuarioRepo.count() > 0) return;
 
-        usuarioRepo.save(new Usuario("admin", encoder.encode("admin123"), Rol.ADMIN));
-        usuarioRepo.save(new Usuario("estudiante", encoder.encode("est123"), Rol.USER));
+        usuarioRepo.save(new Usuario(adminNombre, encoder.encode(adminClave), Rol.ADMIN));
+        usuarioRepo.save(new Usuario(estudianteNombre, encoder.encode(estudianteClave), Rol.USER));
 
         Curso java = cursoRepo.save(new Curso("Java Full Stack", "JAVA-01", 120,
                 "Fundamentos de Java, JEE y Spring Framework"));
@@ -57,7 +71,7 @@ public class DatosIniciales implements CommandLineRunner {
         evaluacionRepo.save(new Evaluacion(ana, front, 3.4));
 
         System.out.println("=== SpringEduManager listo ===");
-        System.out.println("  admin / admin123        (ROLE_ADMIN)");
-        System.out.println("  estudiante / est123     (ROLE_USER)");
+        System.out.println("  " + adminNombre + " / " + adminClave + "        (ROLE_ADMIN)");
+        System.out.println("  " + estudianteNombre + " / " + estudianteClave + "     (ROLE_USER)");
     }
 }

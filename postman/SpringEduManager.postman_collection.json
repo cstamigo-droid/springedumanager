@@ -1,0 +1,152 @@
+{
+  "info": {
+    "name": "SpringEduManager API",
+    "description": "Etapa 5 - Interoperabilidad. CRUD REST de cursos y estudiantes con HTTP Basic (admin / admin123). Importar en Postman: File > Import.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{usuario}}", "type": "string" },
+      { "key": "password", "value": "{{clave}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "base", "value": "http://localhost:8080" },
+    { "key": "usuario", "value": "admin" },
+    { "key": "clave", "value": "admin123" }
+  ],
+  "item": [
+    {
+      "name": "Cursos",
+      "item": [
+        {
+          "name": "GET listar cursos",
+          "request": { "method": "GET", "url": "{{base}}/api/cursos" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 y JSON', () => { pm.response.to.have.status(200); pm.response.to.be.json; });",
+            "pm.test('devuelve una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+          ] } }]
+        },
+        {
+          "name": "GET curso por id",
+          "request": { "method": "GET", "url": "{{base}}/api/cursos/1" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));",
+            "pm.test('trae codigo y nombre', () => { const c = pm.response.json(); pm.expect(c).to.have.property('codigo'); pm.expect(c).to.have.property('nombre'); });"
+          ] } }]
+        },
+        {
+          "name": "POST crear curso",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base}}/api/cursos",
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Testing con JUnit\",\n  \"codigo\": \"QA-101\",\n  \"horas\": 30,\n  \"descripcion\": \"Pruebas unitarias y de integracion\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('201 creado', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('cursoId', pm.response.json().id);"
+          ] } }]
+        },
+        {
+          "name": "POST curso invalido (400 con detalle por campo)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base}}/api/cursos",
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"\",\n  \"codigo\": \"\",\n  \"horas\": 0\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('400', () => pm.response.to.have.status(400));",
+            "pm.test('dice que campos fallaron', () => pm.expect(pm.response.json().campos).to.have.keys('nombre','codigo','horas'));"
+          ] } }]
+        },
+        {
+          "name": "PUT actualizar curso",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base}}/api/cursos/{{cursoId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Testing con JUnit y Mockito\",\n  \"codigo\": \"QA-101\",\n  \"horas\": 40,\n  \"descripcion\": \"Actualizado desde Postman\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));",
+            "pm.test('horas actualizadas', () => pm.expect(pm.response.json().horas).to.eql(40));"
+          ] } }]
+        },
+        {
+          "name": "DELETE eliminar curso",
+          "request": { "method": "DELETE", "url": "{{base}}/api/cursos/{{cursoId}}" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('204 sin contenido', () => pm.response.to.have.status(204));"
+          ] } }]
+        },
+        {
+          "name": "GET curso inexistente (404)",
+          "request": { "method": "GET", "url": "{{base}}/api/cursos/999999" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('404', () => pm.response.to.have.status(404));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Estudiantes",
+      "item": [
+        {
+          "name": "GET listar estudiantes",
+          "request": { "method": "GET", "url": "{{base}}/api/estudiantes" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200 y JSON', () => { pm.response.to.have.status(200); pm.response.to.be.json; });"
+          ] } }]
+        },
+        {
+          "name": "POST crear estudiante",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base}}/api/estudiantes",
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Pedro Rojas\",\n  \"email\": \"pedro@bootcamp.cl\",\n  \"rut\": \"11.222.333-4\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('201 creado', () => pm.response.to.have.status(201));",
+            "pm.collectionVariables.set('estudianteId', pm.response.json().id);"
+          ] } }]
+        },
+        {
+          "name": "PUT actualizar estudiante",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base}}/api/estudiantes/{{estudianteId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Pedro Rojas Diaz\",\n  \"email\": \"pedro@bootcamp.cl\",\n  \"rut\": \"11.222.333-4\"\n}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('200', () => pm.response.to.have.status(200));"
+          ] } }]
+        },
+        {
+          "name": "DELETE eliminar estudiante",
+          "request": { "method": "DELETE", "url": "{{base}}/api/estudiantes/{{estudianteId}}" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('204', () => pm.response.to.have.status(204));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Seguridad",
+      "item": [
+        {
+          "name": "GET sin credenciales (401, no redirige)",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{base}}/api/cursos" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('401', () => pm.response.to.have.status(401));",
+            "pm.test('trae WWW-Authenticate', () => pm.response.to.have.header('WWW-Authenticate'));"
+          ] } }]
+        }
+      ]
+    }
+  ]
+}

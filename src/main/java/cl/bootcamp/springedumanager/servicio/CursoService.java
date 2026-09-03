@@ -28,10 +28,37 @@ public class CursoService {
 
     @Transactional
     public Curso guardar(Curso curso) {
-        if (curso.getId() == null && repositorio.existsByCodigo(curso.getCodigo())) {
+        boolean codigoDeOtro = repositorio.findByCodigo(curso.getCodigo())
+                .map(otro -> !otro.getId().equals(curso.getId()))
+                .orElse(false);
+        if (codigoDeOtro) {
             throw new IllegalArgumentException("Ya existe un curso con el codigo " + curso.getCodigo());
         }
         return repositorio.save(curso);
+    }
+
+    /**
+     * Actualizacion (PUT de la API). La unicidad del codigo se verifica ANTES de
+     * tocar la entidad: si se modifica primero, Hibernate hace flush del cambio al
+     * ejecutar la consulta y la restriccion UNIQUE de la base explota con un 500
+     * en vez de un 409 explicable.
+     */
+    @Transactional
+    public Optional<Curso> actualizar(Long id, Curso datos) {
+        Optional<Curso> existente = repositorio.findById(id);
+        if (existente.isEmpty()) return Optional.empty();
+        boolean codigoDeOtro = repositorio.findByCodigo(datos.getCodigo())
+                .map(otro -> !otro.getId().equals(id))
+                .orElse(false);
+        if (codigoDeOtro) {
+            throw new IllegalArgumentException("Ya existe un curso con el codigo " + datos.getCodigo());
+        }
+        Curso c = existente.get();
+        c.setNombre(datos.getNombre());
+        c.setCodigo(datos.getCodigo());
+        c.setHoras(datos.getHoras());
+        c.setDescripcion(datos.getDescripcion());
+        return Optional.of(repositorio.save(c));
     }
 
     @Transactional

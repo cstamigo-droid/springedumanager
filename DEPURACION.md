@@ -207,3 +207,43 @@ verificó antes de compilar: `mvn -v` reporta *runtime 21.0.11 (Temurin)*.
 validación estaba en verde y no probaba la validación: probaba que un JSON roto se rechaza. Y el
 401 de la API sí se generaba — pero un re-despacho interno lo pisaba tres pasos después. En los dos
 casos, mirar sólo el número final habría dado por bueno algo que no funcionaba.
+
+---
+
+## Revisión final contra el enunciado oficial — 2026-09-03
+
+El PDF *💼 Proyecto Módulo #6 · ABP* se revisó ítem por ítem sobre la aplicación corriendo
+(`mvn clean install package` con JDK 21, `pruebas_flujos.sh` 35/35 y 25 pruebas automáticas).
+Aparecieron **cuatro hallazgos**, todos corregidos y con prueba que los cubre:
+
+| # | Hallazgo | Causa raíz | Corrección |
+|---|---|---|---|
+| 3 | **5 de las 13 capturas eran la misma imagen** (la pantalla de login) y otras 2 estaban repetidas. | El script de capturas hacía clic en `button[type=submit]` a secas, y el **primer** botón de esa clase en la página es "Salir" de la cabecera: cerraba la sesión en vez de guardar el curso. Las capturas siguientes mostraban el login. | `herramientas/capturar_flujo.py` apunta al botón **del formulario** y **comprueba la URL** antes de guardar cada imagen: si una pantalla autenticada termina en `/login`, se detiene con el número del paso. 14 capturas nuevas, ninguna repetida (`md5sum`). |
+| 4 | El 409 de "código duplicado" que declara `ApiExceptionHandler` **nunca se disparaba**: el POST devolvía 400 con texto plano. | El controlador atrapaba `IllegalArgumentException` antes de que llegara al `@RestControllerAdvice`. El handler era código muerto para ese caso. | Se quitó el `try/catch` de los `@PostMapping` REST. Ahora el duplicado responde **409 en JSON** (`{"error": "Ya existe un curso con el codigo JAVA-01"}`). |
+| 5 | **`PUT /api/cursos/2` con el código de otro curso daba 500** (`JdbcSQLIntegrityConstraintViolationException`). | El controlador modificaba la entidad y recién después llamaba a `guardar()`, que verificaba el código libre. Hibernate hace *flush* del cambio pendiente antes de ejecutar esa consulta, y la restricción `UNIQUE` explota antes de que la verificación pueda responder. | La actualización se movió a `CursoService.actualizar` / `EstudianteService.actualizar`: **consultar primero, modificar después**. Responde 409, y el curso queda intacto (probado en `unPutConElCodigoDeOtroCursoDevuelve409YNo500`). |
+| 6 | La Lección 4 pide *"configurar usuarios en application.properties"* y estaban fijos en código; la Lección 5 pide *"validar el consumo desde Postman o RestTemplate"* y no había evidencia de ninguno. | — | Usuarios en `edumanager.usuarios.*` de `application.properties`, leídos por `DatosIniciales`. Colección Postman (`postman/`, 12 peticiones con aserciones) y `ApiRestTemplateTest` que consume la API con `RestTemplate` por HTTP real. |
+
+Además, `pruebas_flujos.sh` ahora **sí está en esta carpeta** (antes este documento lo afirmaba y
+el archivo vivía fuera del repositorio) y acepta la URL como parámetro.
+
+Lo que dejó esta revisión: **una captura que "se ve bien" no prueba nada si nadie comprobó en qué
+URL estaba el navegador**. Cinco imágenes idénticas pasaron una revisión visual porque cada una,
+mirada sola, parecía razonable. El `md5sum` las delató en un segundo; la guarda de URL evita que
+vuelva a pasar.
+
+### 🔴 Hallazgo 7 (revisor externo, 03-09) — un POST rechazado devolvía 405 en vez de la página de acceso denegado
+
+**Síntoma.** `POST /cursos/guardar` como USER (rol insuficiente) o como ADMIN con token CSRF
+inválido respondía `405 Method Not Allowed · Allow: GET`, no el 403 con la página propia. El
+revisor lo vio como "intermitente" porque con `curl` el token CSRF se desalinea fácil entre
+sesiones; en el navegador le pasa a cualquier USER que envíe el formulario.
+
+**Causa raíz.** `accessDeniedPage("/acceso-denegado")` llega a esa ruta por un **forward** del
+servlet, y el forward **conserva el método** de la petición original. El handler era
+`@GetMapping`, así que un forward POST no tenía quien lo atendiera: 405. Las pruebas con MockMvc
+no lo veían porque MockMvc no ejecuta forwards; solo la aplicación real lo hacía.
+
+**Corrección.** `@RequestMapping("/acceso-denegado")` (cualquier método). Verificado por HTTP real
+en `pruebas_flujos.sh` (3 comprobaciones nuevas: USER POST → 403 con la página propia, CSRF
+inválido → 403) y en `SeguridadWebTest` (el 403 de USER se reenvía a `/acceso-denegado`, y esa
+ruta acepta POST).
