@@ -47,6 +47,12 @@ class SeguridadWebTest {
     }
 
     @Test
+    void laConsolaH2ExigeSesion() throws Exception {
+        mvc.perform(get("/h2-console/")).andExpect(status().is3xxRedirection())
+           .andExpect(header().string("Location", endsWith("/login")));
+    }
+
+    @Test
     void sinCredencialesLaApiResponde401YNoRedirige() throws Exception {
         mvc.perform(get("/api/cursos"))
            .andExpect(status().isUnauthorized())

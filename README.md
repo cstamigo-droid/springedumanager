@@ -31,7 +31,7 @@ RestTemplate.
 | API | REST con respuestas JSON · interoperabilidad con **RestTemplate** |
 | Observabilidad | Actuator (`/actuator/health`) · log en `logs/` |
 | Gestor de dependencias | Maven (con Maven Wrapper incluido) · JaCoCo · JavaDoc |
-| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**41 pruebas**, cobertura 86 %) |
+| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**42 pruebas**, cobertura 86 %) |
 
 ## Cómo ejecutar
 
@@ -74,7 +74,8 @@ java -jar target/springedumanager-0.0.1-SNAPSHOT.jar
 ```
 
 Cada motor tiene su archivo `application-<motor>.properties` con URL, usuario y clave (también
-por variables `DB_URL`, `DB_USER`, `DB_PASSWORD`). Controladores, servicios, repositorios y vistas
+por variables `DB_URL`, `DB_USER`, `DB_PASSWORD`). Un `DB_ENGINE` que no sea uno de los cuatro
+detiene el arranque con un mensaje claro, en vez de caer en silencio a una H2 sin nombre. Controladores, servicios, repositorios y vistas
 **no cambian**: solo cambia el `DataSource`. Verificado con H2 y con **MariaDB 12.3 real**: las
 mismas comprobaciones HTTP pasan en los dos motores y las 5 tablas se crean solas.
 
@@ -107,6 +108,7 @@ src/test/java/cl/bootcamp/springedumanager/
 ├── IntegracionYReportesTest.java  JdbcTemplate contra la base, RestTemplate contra los servicios — 4
 ├── RegistroYEvaluacionesTest.java  Registro público, notas solo ADMIN, API de evaluaciones con DTOs — 6
 ├── CursoServiceTest.java        Lógica de negocio y consultas JPA — 5
+├── MotorDeBaseTest.java         DB_ENGINE inválido detiene el arranque — 2
 └── SpringEduManagerApplicationTests.java — 1
 
 postman/         Colección Postman: 23 peticiones con aserciones (Basic, JWT, evaluaciones, interoperabilidad)
@@ -144,12 +146,12 @@ starter web; equivale a `spring-boot-starter-web` de las versiones 2 y 3), `spri
 `spring-boot-starter-jdbc`, `spring-boot-starter-security`, `spring-boot-starter-thymeleaf`,
 `spring-boot-starter-validation`, `spring-boot-starter-actuator`, `jjwt` y los drivers de H2,
 MariaDB, MySQL y PostgreSQL. Plugins: Spring Boot, JaCoCo y JavaDoc. Ciclo de vida verificado
-desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 41 pruebas
+desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 42 pruebas
 antes de instalar el artefacto en el repositorio local).
 
 ```bash
 mvn clean test jacoco:report    # cobertura en target/site/jacoco/index.html (86 % de instrucciones)
-mvn javadoc:javadoc             # documentación en target/site/apidocs/index.html
+mvn javadoc:javadoc             # documentación en target/reports/apidocs/index.html
 ```
 
 ### Etapa 2 — Spring MVC (Lección 2)
@@ -172,7 +174,7 @@ los formularios se persiste y se consulta desde la base (capturas 05, 07, 08, 09
 las agregaciones (totales, promedio por curso, % de aprobación). Para un reporte, una consulta
 con `GROUP BY` es más clara y más eficiente que traer las entidades y calcular en Java.
 
-Base H2 embebida por defecto (consola en `/h2-console`), conmutable a MariaDB, MySQL o
+Base H2 embebida por defecto (consola en `/h2-console`, solo con sesión iniciada), conmutable a MariaDB, MySQL o
 PostgreSQL con `DB_ENGINE` (ver arriba).
 
 ### Etapa 4 — Spring Security (Lección 4)
@@ -189,6 +191,7 @@ contraseñas BCrypt. Dos roles:
 | `/registro` (registro público de estudiantes) | público | público |
 | `/api/**` | HTTP Basic **o** JWT Bearer | HTTP Basic **o** JWT Bearer |
 | `/api/auth/token`, `/demo/**`, `/actuator/health` | públicos | públicos |
+| `/h2-console` | con sesión | con sesión |
 
 La protección se aplica por dos vías: reglas en `SecurityConfig` y `@PreAuthorize("hasRole('ADMIN')")`
 sobre los métodos del controlador. Login y logout funcionales (capturas 01, 02, 15). Un USER que
@@ -279,7 +282,7 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 
 ## Verificación
 
-**Pruebas automáticas — 41, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
+**Pruebas automáticas — 42, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
 
 | Clase | Pruebas | Qué demuestra |
 |---|---|---|
@@ -289,9 +292,10 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 | `IntegracionYReportesTest` | 4 | Reporte JdbcTemplate cuadra con la carga inicial · RestTemplate consume el servicio simulado y la API propia · `/demo/**` y `/actuator/health` públicos |
 | `RegistroYEvaluacionesTest` | 6 | `/registro` público crea el estudiante y valida · USER 403 al registrar notas · ADMIN registra y la regla de matrícula rechaza · API de evaluaciones plana, 201/204/409/400 |
 | `CursoServiceTest` | 5 | Carga inicial · código/email repetido rechazado · `@Query` filtra y ordena · matricular no duplica |
+| `MotorDeBaseTest` | 2 | Solo los 4 motores con perfil pasan la validación de `DB_ENGINE` |
 | `SpringEduManagerApplicationTests` | 1 | El contexto arranca |
 
-**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 63 comprobaciones HTTP, 63 OK en H2 (53 OK en MariaDB con la versión previa del guion):**
+**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 63 comprobaciones HTTP, 63 OK en H2 y 63 OK en MariaDB:**
 
 ```
 /cursos sin sesión                302  → redirige al login

@@ -296,3 +296,17 @@ Verificado: 41 pruebas, 63 comprobaciones HTTP, 21 capturas sin repetidas. Lo qu
 no: prefijo `/api/v1/`, Problem Details, `docker-compose` para las bases, y en *senior* auditoria y
 bloqueo optimista. Se dejan fuera a proposito: no los pide la pauta y cambiar el prefijo romperia
 la coleccion Postman, el guion y las capturas ya verificadas.
+
+### Segundo revisor externo (07-09, sobre el nivel middle) — SI CON REPAROS, reparos cerrados
+
+Corrio el proyecto en copia limpia: build OK, 41/41 tests, 63/63 checks en H2 y en MariaDB, sin 500
+en el log, README cotejado cifra por cifra. Lo que objeto y como quedo:
+
+| Reparo | Que se hizo |
+|---|---|
+| El README decia que el JavaDoc sale en `target/site/apidocs`; el plugin lo deja en `target/reports/apidocs` | README corregido (medido: `mvn javadoc:javadoc` genera `target/reports/apidocs/index.html`) |
+| `/h2-console/` era publico: una puerta directa a la base con `sa` sin clave | Ahora exige sesion (302 al login sin ella); test `laConsolaH2ExigeSesion` |
+| `DB_ENGINE=inexistente` NO fallaba: Spring activaba un perfil vacio y arrancaba con un H2 de nombre aleatorio, sin aviso | `SpringEduManagerApplication` valida el motor antes de arrancar y termina con mensaje claro (`DB_ENGINE=oracle no es un motor conocido...`); `MotorDeBaseTest` |
+| MariaDB solo estaba verificado con la version previa del guion (53) | Repetido con el JAR final: **63/63 en MariaDB** |
+| No hay `docker-compose.yml` ni WAR (filas de la matriz de SUS laboratorios, no de la pauta) | Se dejan fuera a proposito: la app corre con H2 sin instalar nada y el JAR ejecutable es lo que pide Spring Boot; documentado aqui |
+| El repositorio de GitHub estaba 2 commits atras del arbol evaluado | `git push` hecho al cerrar esta revision |
