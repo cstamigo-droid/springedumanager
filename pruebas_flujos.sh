@@ -52,6 +52,7 @@ curl -s -b $J $B/estudiantes/1 -o /tmp/d.html; T=$(csrf /tmp/d.html)
 CID=$(curl -s -b $J -u admin:admin123 $B/api/cursos | py -3 -c "import json,sys; print(json.load(sys.stdin)[0]['id'])")
 curl -s -b $J -o /dev/null -d "cursoId=$CID&_csrf=$T" $B/estudiantes/1/matricular
 chk "el estudiante queda matriculado" "SI" "$(curl -s -b $J $B/estudiantes/1 | grep -qi 'curso' && echo SI || echo NO)"
+chk "la ficha del estudiante muestra sus notas (feedback test de uso)" "SI" "$(curl -s -b $J $B/estudiantes/2 | grep -q 'Sus evaluaciones' && curl -s -b $J $B/estudiantes/2 | grep -q '3.4' && echo SI || echo NO)"
 
 echo "--- 7. Autorizacion por rol (USER) ---"
 curl -s -c $JU $B/login -o /tmp/lg.html; T=$(csrf /tmp/lg.html)

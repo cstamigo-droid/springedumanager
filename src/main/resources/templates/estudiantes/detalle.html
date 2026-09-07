@@ -18,6 +18,19 @@
       <tr th:if="${#lists.isEmpty(estudiante.cursos)}"><td colspan="3">Sin cursos aun.</td></tr>
     </table>
 
+    <h3>Sus evaluaciones</h3>
+    <table>
+      <tr><th>Curso</th><th>Nota</th><th>Fecha</th><th>Estado</th></tr>
+      <tr th:each="ev : ${evaluaciones}">
+        <td th:text="${ev.curso.codigo + ' - ' + ev.curso.nombre}"></td>
+        <td th:text="${ev.nota}"></td>
+        <td th:text="${ev.fecha}"></td>
+        <td th:text="${ev.aprobada} ? 'Aprobada' : 'Reprobada'"
+            th:style="${ev.aprobada} ? 'color:#256d47' : 'color:#96342b'"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(evaluaciones)}"><td colspan="4">Sin evaluaciones aun.</td></tr>
+    </table>
+
     <h3>Matricular en un curso</h3>
     <form class="tarjeta" th:action="@{'/estudiantes/' + ${estudiante.id} + '/matricular'}" method="post">
       <label>Curso

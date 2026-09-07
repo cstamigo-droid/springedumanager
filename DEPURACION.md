@@ -152,19 +152,42 @@ proyecto es más riesgo que beneficio. Queda anotado como observación, no como 
 
 ---
 
-## Paso 4 — Feedback externo
+## Paso 4 — Feedback externo ✅ (07-09-2026)
 
-⚠️ **Este paso requiere la acción personal de Cristian.** El enunciado pide mostrar el producto a
-una persona externa, idealmente no técnica, hacer un test de uso guiado y tomar nota **sin
-justificarse**. Eso no lo puedo hacer por él.
+**Hecho con Raúl**, usuario real de otro sistema de Cristian y persona no técnica para este
+producto. Se publicó la aplicación desde el PC con un túnel temporal (Cloudflare Tunnel), se le
+mandó por WhatsApp la URL y las 4 tareas del guion **sin explicar nada**, y las hizo desde su
+celular. Evidencia: `evidencias/feedback_test_de_uso.png` (captura de la conversación, sin datos
+personales).
 
-Lo que sí queda preparado, en `GUIA_TEST_DE_USO.md`: las cuatro tareas que hay que pedirle a la
-persona, qué observar mientras las hace, y la tabla para anotar. La instrucción central de la
-consigna es **no explicar y no justificarse**: si la persona se traba, eso *es* el resultado.
+Su devolución, textual:
+
+> "Ya hice los 4 puntos"
+> "Pensé que al entrar a 'estudiantes' se vería la nota"
+> "Pero había que entrar a evaluación para verla"
+
+| Tarea | Resultado |
+|---|---|
+| Entrar | Sin dudas |
+| Crear un curso | Sin dudas |
+| Ver las notas de Ana Soto | **Se trabó**: fue a *Estudiantes* → ficha de Ana, esperaba ver ahí la nota, y no estaba. La encontró recién en *Evaluaciones* |
+| Cerrar sesión | Sin dudas |
+
+**Lo que dice el hallazgo:** la ficha del estudiante mostraba sus cursos y el formulario de
+matrícula, pero no sus notas. Para una persona que piensa en "el alumno", la nota es parte de la
+ficha; la lista global de *Evaluaciones* es la vista del administrador, no la del que consulta a
+una persona. Nadie del equipo lo había visto porque quien construye sabe dónde está cada cosa.
+
+## Paso 5 — Ajuste aplicado a partir del feedback
+
+La ficha del estudiante (`/estudiantes/{id}`) ahora tiene la sección **"Sus evaluaciones"** con
+curso, nota, fecha y estado. Cubierto por `laFichaDelEstudianteMuestraSusNotas` (MockMvc) y por
+una comprobación HTTP en `pruebas_flujos.sh`. Un cambio de 10 líneas que no habría existido sin
+el paso 4: es exactamente el valor de mostrarle el producto a alguien que no lo construyó.
 
 ---
 
-## Paso 5 — Ajustes finales
+## Paso 5b — Ajustes finales (revisión de textos y pantallas)
 
 | Revisión | Estado |
 |---|---|

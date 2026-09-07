@@ -31,7 +31,7 @@ RestTemplate.
 | API | REST con respuestas JSON · interoperabilidad con **RestTemplate** |
 | Observabilidad | Actuator (`/actuator/health`) · log en `logs/` |
 | Gestor de dependencias | Maven (con Maven Wrapper incluido) · JaCoCo · JavaDoc |
-| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**42 pruebas**, cobertura 86 %) |
+| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**43 pruebas**, cobertura 86 %) |
 
 ## Cómo ejecutar
 
@@ -106,7 +106,7 @@ src/test/java/cl/bootcamp/springedumanager/
 ├── ApiRestTemplateTest.java     CRUD completo consumido con RestTemplate por HTTP real — 8
 ├── JwtApiTest.java              Token JWT, Bearer válido/alterado, Basic sigue funcionando — 5
 ├── IntegracionYReportesTest.java  JdbcTemplate contra la base, RestTemplate contra los servicios — 4
-├── RegistroYEvaluacionesTest.java  Registro público, notas solo ADMIN, API de evaluaciones con DTOs — 6
+├── RegistroYEvaluacionesTest.java  Registro público, notas solo ADMIN, ficha con notas, API con DTOs — 7
 ├── CursoServiceTest.java        Lógica de negocio y consultas JPA — 5
 ├── MotorDeBaseTest.java         DB_ENGINE inválido detiene el arranque — 2
 └── SpringEduManagerApplicationTests.java — 1
@@ -114,9 +114,11 @@ src/test/java/cl/bootcamp/springedumanager/
 postman/         Colección Postman: 23 peticiones con aserciones (Basic, JWT, evaluaciones, interoperabilidad)
 CAPTURAS/        21 capturas del flujo + _GUION_CAPTURAS.md (qué muestra cada una)
 herramientas/    capturar_flujo.py — regenera las capturas recorriendo la app en Chrome
-pruebas_flujos.sh  63 comprobaciones HTTP sobre la aplicación corriendo
+pruebas_flujos.sh  64 comprobaciones HTTP sobre la aplicación corriendo
 DEPURACION.md    Revisión técnica: hallazgos con causa raíz y corrección
 GUIA_TEST_DE_USO.md  Guion del test de uso con una persona externa
+CHECKLIST_CIERRE.md  Checklist de cierre del producto, 18/18 con evidencia
+evidencias/      Devolución del test de uso con una persona externa
 SUPUESTOS_ASUMIDOS.md  Decisiones que el enunciado dejaba abiertas y por qué se tomaron
 *.launch         Configuraciones de ejecución para Eclipse/STS (H2 y MariaDB)
 ```
@@ -146,7 +148,7 @@ starter web; equivale a `spring-boot-starter-web` de las versiones 2 y 3), `spri
 `spring-boot-starter-jdbc`, `spring-boot-starter-security`, `spring-boot-starter-thymeleaf`,
 `spring-boot-starter-validation`, `spring-boot-starter-actuator`, `jjwt` y los drivers de H2,
 MariaDB, MySQL y PostgreSQL. Plugins: Spring Boot, JaCoCo y JavaDoc. Ciclo de vida verificado
-desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 42 pruebas
+desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 43 pruebas
 antes de instalar el artefacto en el repositorio local).
 
 ```bash
@@ -282,7 +284,7 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 
 ## Verificación
 
-**Pruebas automáticas — 42, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
+**Pruebas automáticas — 43, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
 
 | Clase | Pruebas | Qué demuestra |
 |---|---|---|
@@ -290,12 +292,12 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 | `ApiRestTemplateTest` | 8 | CRUD de cursos y estudiantes con `RestTemplate` por HTTP real · 400 con campos · 404 · 409 en POST y PUT · 401 sin credenciales |
 | `JwtApiTest` | 5 | Token con credenciales correctas · Bearer válido 200 · clave incorrecta 401 en JSON · token alterado 401 · Basic sigue funcionando |
 | `IntegracionYReportesTest` | 4 | Reporte JdbcTemplate cuadra con la carga inicial · RestTemplate consume el servicio simulado y la API propia · `/demo/**` y `/actuator/health` públicos |
-| `RegistroYEvaluacionesTest` | 6 | `/registro` público crea el estudiante y valida · USER 403 al registrar notas · ADMIN registra y la regla de matrícula rechaza · API de evaluaciones plana, 201/204/409/400 |
+| `RegistroYEvaluacionesTest` | 7 | `/registro` público crea el estudiante y valida · USER 403 al registrar notas · ADMIN registra y la regla de matrícula rechaza · API de evaluaciones plana, 201/204/409/400 |
 | `CursoServiceTest` | 5 | Carga inicial · código/email repetido rechazado · `@Query` filtra y ordena · matricular no duplica |
 | `MotorDeBaseTest` | 2 | Solo los 4 motores con perfil pasan la validación de `DB_ENGINE` |
 | `SpringEduManagerApplicationTests` | 1 | El contexto arranca |
 
-**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 63 comprobaciones HTTP, 63 OK en H2 y 63 OK en MariaDB:**
+**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 64 comprobaciones HTTP, 64 OK en H2 y en MariaDB:**
 
 ```
 /cursos sin sesión                302  → redirige al login

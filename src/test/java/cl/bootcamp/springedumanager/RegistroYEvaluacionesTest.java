@@ -80,6 +80,18 @@ class RegistroYEvaluacionesTest {
            .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/evaluaciones/nueva"));
     }
 
+    @Test
+    @WithMockUser(roles = "USER")
+    void laFichaDelEstudianteMuestraSusNotas() throws Exception {
+        // Feedback del test de uso con una persona externa: "pense que al entrar a
+        // estudiantes se veria la nota". Ana (2) tiene un 3.4 en FRONT-01.
+        mvc.perform(get("/estudiantes/2"))
+           .andExpect(status().isOk())
+           .andExpect(content().string(containsString("Sus evaluaciones")))
+           .andExpect(content().string(containsString("3.4")))
+           .andExpect(content().string(containsString("Reprobada")));
+    }
+
     // --- API de evaluaciones con DTOs ---
 
     @Test

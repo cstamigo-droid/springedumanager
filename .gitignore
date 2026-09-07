@@ -9,3 +9,4 @@ target/
 __pycache__/
 *.bak_*
 logs/
+ARRANCAR_DEMO.bat
