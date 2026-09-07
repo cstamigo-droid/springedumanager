@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Reportes</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Reporte academico</h2>
+    <p>Calculado con <b>JdbcTemplate</b> y SQL directo (agregaciones), a diferencia de las listas que usan JPA.</p>
+    <table>
+      <tr><th>Cursos</th><th>Estudiantes</th><th>Evaluaciones</th><th>Promedio general</th></tr>
+      <tr>
+        <td th:text="${totales.cursos}"></td>
+        <td th:text="${totales.estudiantes}"></td>
+        <td th:text="${totales.evaluaciones}"></td>
+        <td th:text="${totales.promedioGeneral != null} ? ${#numbers.formatDecimal(totales.promedioGeneral, 1, 1)} : '-'"></td>
+      </tr>
+    </table>
+    <h3>Por curso</h3>
+    <table>
+      <tr><th>Codigo</th><th>Curso</th><th>Matriculados</th><th>Evaluaciones</th><th>Promedio</th><th>Aprobacion</th></tr>
+      <tr th:each="f : ${filas}">
+        <td th:text="${f.codigo}"></td>
+        <td th:text="${f.nombre}"></td>
+        <td th:text="${f.matriculados}"></td>
+        <td th:text="${f.evaluaciones}"></td>
+        <td th:text="${f.promedio != null} ? ${#numbers.formatDecimal(f.promedio, 1, 1)} : '-'"></td>
+        <td th:text="${f.evaluaciones > 0} ? ${f.porcentajeAprobacion() + ' %'} : '-'"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(filas)}"><td colspan="6">No hay cursos registrados.</td></tr>
+    </table>
+  </main>
+</body>
+</html>

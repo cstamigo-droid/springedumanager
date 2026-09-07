@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>API Lab</title><link rel="stylesheet" th:href="@{/css/estilo.css}">
+<style>
+  pre.salida{background:#1e2a35;color:#e6edf3;padding:12px;border-radius:6px;overflow:auto;max-height:340px;font-size:13px}
+  .fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  .token{word-break:break-all;font-family:monospace;font-size:12px;color:#256d47}
+</style>
+</head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>API Lab &mdash; la API REST con JWT, sin instalar nada</h2>
+    <p>Mismo recorrido que haria Postman u otro sistema: <b>pedir un token &rarr; llamar a la API con
+      <code>Authorization: Bearer</code> &rarr; leer el JSON</b>. Hecho con jQuery + AJAX.</p>
+
+    <section class="tarjeta">
+      <h3>1. Pedir el token &mdash; <code>POST /api/auth/token</code></h3>
+      <div class="fila">
+        <label>Usuario <input id="usuario" type="text" value="admin"></label>
+        <label>Contrasena <input id="clave" type="password" value="admin123"></label>
+        <button class="btn" id="btnToken" type="button">Obtener JWT</button>
+      </div>
+      <div id="estadoToken"></div>
+      <div id="token" class="token"></div>
+    </section>
+
+    <section class="tarjeta">
+      <h3>2. Llamar a la API con el token</h3>
+      <div class="fila">
+        <button class="btn" id="btnCursos" type="button" disabled>GET /api/cursos</button>
+        <button class="btn" id="btnEstudiantes" type="button" disabled>GET /api/estudiantes</button>
+        <button class="btn gris" id="btnSinToken" type="button">GET /api/cursos sin token (401)</button>
+      </div>
+      <div id="estadoLlamada"></div>
+      <pre class="salida" id="salida">La respuesta JSON aparece aca.</pre>
+    </section>
+  </main>
+
+  <script th:src="@{/js/vendor/jquery-3.6.1.min.js}"></script>
+  <script>
+    let jwt = null;
+    const muestra = (estado, cuerpo) => {
+      $('#estadoLlamada').html('<b>HTTP ' + estado + '</b>');
+      $('#salida').text(typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo, null, 2));
+    };
+    $('#btnToken').on('click', () => {
+      $.ajax({
+        url: '/api/auth/token', method: 'POST', contentType: 'application/json',
+        data: JSON.stringify({ username: $('#usuario').val(), password: $('#clave').val() })
+      }).done(r => {
+        jwt = r.token;
+        $('#estadoToken').html('<span class="aviso ok">Token recibido (' + r.tipo + ', expira en ' + r.expiraEnSegundos + ' s)</span>');
+        $('#token').text(jwt);
+        $('#btnCursos, #btnEstudiantes').prop('disabled', false);
+      }).fail(x => {
+        jwt = null;
+        $('#estadoToken').html('<span class="aviso mal">HTTP ' + x.status + ' &mdash; ' + (x.responseJSON ? x.responseJSON.error : 'error') + '</span>');
+        $('#token').text('');
+        $('#btnCursos, #btnEstudiantes').prop('disabled', true);
+      });
+    });
+    const llamar = (url, conToken) => $.ajax({
+        url, method: 'GET', dataType: 'json',
+        headers: conToken && jwt ? { Authorization: 'Bearer ' + jwt } : {}
+      }).done((r, s, x) => muestra(x.status, r))
+        .fail(x => muestra(x.status, x.responseText || '(sin cuerpo) ' + (x.getResponseHeader('WWW-Authenticate') || '')));
+    $('#btnCursos').on('click', () => llamar('/api/cursos', true));
+    $('#btnEstudiantes').on('click', () => llamar('/api/estudiantes', true));
+    $('#btnSinToken').on('click', () => llamar('/api/cursos', false));
+  </script>
+</body>
+</html>

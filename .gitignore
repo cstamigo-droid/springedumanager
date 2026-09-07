@@ -8,3 +8,4 @@ target/
 *.log
 __pycache__/
 *.bak_*
+logs/

@@ -72,13 +72,36 @@ chk "el 401 trae WWW-Authenticate" "SI" "$(curl -s -o /dev/null -D - $B/api/curs
 chk "el 401 NO redirige a una pagina HTML" "" "$(curl -s -o /dev/null -w %{redirect_url} $B/api/cursos)"
 chk "API con Basic auth responde" 200 "$(curl -s -u admin:admin123 -o /tmp/api.json -w %{http_code} $B/api/cursos)"
 chk "la API devuelve JSON valido" "SI" "$(cat /tmp/api.json | py -3 -c "import json,sys; json.load(sys.stdin); print('SI')" 2>/dev/null || echo NO)"
-printf '{"nombre":"API REST","codigo":"API-200","horas":20}' > $DIR/ok.json
+COD="API-$(date +%s | tail -c 5)"   # codigo unico por corrida: el guion se puede repetir contra la misma instancia
+printf '{"nombre":"API REST","codigo":"%s","horas":20}' "$COD" > $DIR/ok.json
 printf '{"nombre":"","codigo":"","horas":0}' > $DIR/bad.json
 chk "POST REST valido crea (201)" 201 "$(curl -s -u admin:admin123 -o /dev/null -w %{http_code} -H 'Content-Type: application/json' --data-binary @$DIR/ok.json $B/api/cursos)"
 chk "POST REST invalido rechaza (400)" 400 "$(curl -s -u admin:admin123 -o $DIR/bad_resp.json -w %{http_code} -H 'Content-Type: application/json' --data-binary @$DIR/bad.json $B/api/cursos)"
 chk "el 400 dice QUE campo fallo" "SI" "$(grep -q '"campos"' $DIR/bad_resp.json && echo SI || echo NO)"
 chk "el 400 nombra el campo horas" "SI" "$(grep -q 'horas' $DIR/bad_resp.json && echo SI || echo NO)"
 chk "GET REST id inexistente (404)" 404 "$(curl -s -u admin:admin123 -o /dev/null -w %{http_code} $B/api/cursos/999999)"
+
+echo "--- 8b. JWT (plus) ---"
+printf '{"username":"admin","password":"admin123"}' > $DIR/cred.json
+printf '{"username":"admin","password":"otra"}' > $DIR/mal.json
+chk "POST /api/auth/token con clave mala -> 401" 401 "$(curl -s -o $DIR/tk_mal.json -w %{http_code} -H 'Content-Type: application/json' --data-binary @$DIR/mal.json $B/api/auth/token)"
+chk "ese 401 viene en JSON con motivo" "SI" "$(grep -q 'incorrectos' $DIR/tk_mal.json && echo SI || echo NO)"
+chk "POST /api/auth/token correcto -> 200" 200 "$(curl -s -o $DIR/tk.json -w %{http_code} -H 'Content-Type: application/json' --data-binary @$DIR/cred.json $B/api/auth/token)"
+JWT=$(grep -o '"token":"[^"]*"' $DIR/tk.json | sed 's/.*:"//;s/"$//')   # sin python: /tmp de Git Bash no existe para el Python de Windows
+chk "el token tiene 3 partes (header.payload.firma)" 3 "$(echo -n "$JWT" | awk -F. '{print NF}')"
+chk "GET /api/cursos con Bearer -> 200" 200 "$(curl -s -o /dev/null -w %{http_code} -H "Authorization: Bearer $JWT" $B/api/cursos)"
+chk "GET /api/cursos con Bearer alterado -> 401" 401 "$(curl -s -o /dev/null -w %{http_code} -H "Authorization: Bearer ${JWT%????}abcd" $B/api/cursos)"
+
+echo "--- 8c. Interoperabilidad, reportes, API Lab, estado ---"
+chk "servicio externo simulado /demo/campus/calendario es publico" 200 "$(curl -s -o $DIR/cal.json -w %{http_code} $B/demo/campus/calendario)"
+chk "el calendario trae periodos en JSON" "SI" "$(grep -q '"codigo"' $DIR/cal.json && echo SI || echo NO)"
+chk "GET /integracion con sesion" 200 "$(curl -s -b $J -o $DIR/int.html -w %{http_code} $B/integracion)"
+chk "la pantalla muestra lo consumido por RestTemplate" "SI" "$(grep -q 'JAVA-01' $DIR/int.html && grep -qi 'semestre' $DIR/int.html && echo SI || echo NO)"
+chk "GET /reportes con sesion (JdbcTemplate)" 200 "$(curl -s -b $J -o $DIR/rep.html -w %{http_code} $B/reportes)"
+chk "el reporte trae promedio y % de aprobacion" "SI" "$(grep -q '%' $DIR/rep.html && grep -q 'JAVA-01' $DIR/rep.html && echo SI || echo NO)"
+chk "GET /api-lab con sesion" 200 "$(curl -s -b $J -o /dev/null -w %{http_code} $B/api-lab)"
+chk "GET /integracion sin sesion redirige" 302 "$(curl -s -o /dev/null -w %{http_code} $B/integracion)"
+chk "/actuator/health responde UP" "SI" "$(curl -s $B/actuator/health | grep -q UP && echo SI || echo NO)"
 
 echo "--- 9. Cierre de sesion ---"
 curl -s -b $J $B/cursos -o /tmp/c.html; T=$(csrf /tmp/c.html)

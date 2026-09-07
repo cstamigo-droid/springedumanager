@@ -247,3 +247,38 @@ no lo veían porque MockMvc no ejecuta forwards; solo la aplicación real lo hac
 en `pruebas_flujos.sh` (3 comprobaciones nuevas: USER POST → 403 con la página propia, CSRF
 inválido → 403) y en `SeguridadWebTest` (el 403 de USER se reenvía a `/acceso-denegado`, y esa
 ruta acepta POST).
+
+---
+
+## Revisión contra el material del profesor — 2026-09-07
+
+El 05-09 el profesor publicó dos laboratorios (Soporte Fácil, GeekVault) con su **matriz de
+cumplimiento del módulo**, y el solucionario de SpringEduManager en cuatro niveles (trainee /
+junior / middle / senior). Según su propia descripción, el nivel *middle* agrega **JWT,
+JdbcTemplate y RestTemplate**, y ambos laboratorios traen perfiles multi-motor, JaCoCo, Actuator y
+un "API Lab". Nuestro proyecto cumplía la pauta entera pero no tenía nada de eso. Se agregó, con
+la misma estructura que usa el profesor, sin tocar lo ya verificado:
+
+| Agregado | Dónde | Cómo se verificó |
+|---|---|---|
+| **JWT** (plus de la L5) | `JwtService`, `JwtAuthenticationFilter`, `POST /api/auth/token` | `JwtApiTest` (5) + 6 checks HTTP: token de 3 partes, Bearer 200, alterado 401, clave mala 401 en JSON, Basic sigue |
+| **JdbcTemplate** | `repositorio/jdbc/ReporteDao` + `/reportes` | test contra la base + check HTTP + captura 10 |
+| **RestTemplate en la app** | `RestClientConfig` (@Bean) + `CampusService` + `/integracion` + servicio externo simulado `/demo/campus/calendario` | test por HTTP real + 4 checks + captura 11 |
+| **API Lab** (jQuery + AJAX) | `/api-lab` | captura 12 tomada con el flujo real: token → GET con Bearer → JSON |
+| **Perfiles por motor** | `application-{h2,mariadb,mysql,postgresql}.properties`, `DB_ENGINE` | **MariaDB 12.3 real**: 5 tablas creadas, 53/53 checks, hash BCrypt en `usuario` |
+| JaCoCo · JavaDoc · Actuator · log en archivo · `.launch` | `pom.xml`, `application.properties` | cobertura 86 % · `/actuator/health` UP |
+
+### Dos trampas que aparecieron al hacerlo
+
+**`local.server.port` no existe cuando se crea el bean.** El primer `CampusService` leía la URL base
+con `@Value` en el constructor; en los tests con puerto aleatorio el contexto no arrancaba
+(*Could not resolve placeholder 'local.server.port'*). El puerto real recién existe cuando Tomcat
+levantó, así que la URL se resuelve **al usarla**, leyendo `Environment` en ese momento.
+
+**El cliente HTTP clásico de Java descarta el cuerpo de un 401.** `POST /api/auth/token` con clave
+mala responde 401 con `{"error":"Usuario o contrasena incorrectos"}` (verificado con `curl`), pero
+el test lo recibía vacío: `HttpURLConnection` en modo streaming no expone el cuerpo de error. El
+test usa `JdkClientHttpRequestFactory` (java.net.http). El servidor estaba bien; el instrumento no.
+
+Y una tercera, vieja conocida: el guion `pruebas_flujos.sh` extraía el JWT con el Python de
+Windows sobre una ruta `/tmp` de Git Bash — la misma falla del 22-ago, ahora sin Python (`grep`).

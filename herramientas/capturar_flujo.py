@@ -92,6 +92,20 @@ def main():
 
         page.goto(f"{BASE}/evaluaciones", wait_until="networkidle")
         capturar(page, "evaluaciones", "/evaluaciones")
+
+        page.goto(f"{BASE}/reportes", wait_until="networkidle")
+        capturar(page, "reportes_jdbctemplate", "/reportes")
+
+        page.goto(f"{BASE}/integracion", wait_until="networkidle")
+        capturar(page, "integracion_resttemplate", "/integracion")
+
+        # API Lab: pedir el JWT y llamar a la API desde el navegador
+        page.goto(f"{BASE}/api-lab", wait_until="networkidle")
+        page.click("#btnToken")
+        page.wait_for_selector("#btnCursos:not([disabled])", timeout=8000)
+        page.click("#btnCursos")
+        page.wait_for_function("document.querySelector('#salida').textContent.includes('JAVA-01')", timeout=8000)
+        capturar(page, "api_lab_jwt", "/api-lab")
         ctx.close()
 
         # Rol USER: mismo recorrido, pero bloqueado en la carga

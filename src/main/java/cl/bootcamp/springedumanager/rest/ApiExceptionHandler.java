@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -42,5 +43,13 @@ public class ApiExceptionHandler {
         Map<String, Object> cuerpo = new LinkedHashMap<>();
         cuerpo.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo);
+    }
+
+    /** POST /api/auth/token con usuario o clave incorrectos. */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> credenciales(AuthenticationException ex) {
+        Map<String, Object> cuerpo = new LinkedHashMap<>();
+        cuerpo.put("error", "Usuario o contrasena incorrectos");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(cuerpo);
     }
 }

@@ -31,6 +31,10 @@ public class PaginasController {
     @RequestMapping("/acceso-denegado")
     public String accesoDenegado() { return "error/403"; }
 
+    /** Etapa 5 (plus): pantalla para pedir un JWT y llamar a la API desde el navegador. */
+    @GetMapping("/api-lab")
+    public String apiLab() { return "api-lab"; }
+
     @GetMapping("/evaluaciones")
     public String evaluaciones(Model model) {
         model.addAttribute("evaluaciones", evaluacionService.listar());

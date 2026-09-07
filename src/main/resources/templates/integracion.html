@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Integracion</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Interoperabilidad con RestTemplate</h2>
+    <p>SpringEduManager consumiendo otros sistemas por HTTP. El flujo es
+      <b>RestTemplate &rarr; HTTP &rarr; JSON &rarr; objeto Java</b>; lo que ves abajo son objetos Java
+      armados a partir de las respuestas JSON de dos servicios distintos.</p>
+    <div th:if="${errorIntegracion}" class="aviso mal" th:text="${errorIntegracion}"></div>
+
+    <h3>1. Calendario academico del campus (servicio externo simulado)</h3>
+    <p>Fuente: <code th:text="${baseUrl + '/demo/campus/calendario'}"></code> &mdash; sin credenciales, como un calendario institucional.</p>
+    <table>
+      <tr><th>Codigo</th><th>Periodo</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr>
+      <tr th:each="p : ${periodos}">
+        <td th:text="${p.codigo}"></td><td th:text="${p.nombre}"></td>
+        <td th:text="${p.inicio}"></td><td th:text="${p.fin}"></td>
+        <td th:text="${p.vigente} ? 'Vigente' : '-'" th:style="${p.vigente} ? 'color:#256d47;font-weight:bold' : ''"></td>
+      </tr>
+      <tr th:if="${periodos == null or #lists.isEmpty(periodos)}"><td colspan="5">Sin datos del campus.</td></tr>
+    </table>
+
+    <h3>2. La API propia, consumida como lo haria otro sistema</h3>
+    <p>Fuente: <code th:text="${baseUrl + '/api/cursos'}"></code> &mdash; con HTTP Basic (usuario <code>estudiante</code>), deserializado a <code>Curso[]</code>.</p>
+    <table>
+      <tr><th>Codigo</th><th>Nombre</th><th>Horas</th></tr>
+      <tr th:each="c : ${cursosApi}">
+        <td th:text="${c.codigo}"></td><td th:text="${c.nombre}"></td><td th:text="${c.horas}"></td>
+      </tr>
+      <tr th:if="${cursosApi == null or #lists.isEmpty(cursosApi)}"><td colspan="3">La API no devolvio cursos.</td></tr>
+    </table>
+    <p><a class="btn gris" th:href="@{/api-lab}">Probar la API con JWT (API Lab)</a></p>
+  </main>
+</body>
+</html>
