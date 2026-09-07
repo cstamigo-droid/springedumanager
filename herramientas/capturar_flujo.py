@@ -57,6 +57,16 @@ def main():
         page.goto(f"{BASE}/login", wait_until="networkidle")
         capturar(page, "login", "/login")
 
+        # Registro publico de estudiantes (sin sesion)
+        page.goto(f"{BASE}/registro", wait_until="networkidle")
+        page.fill('input[name="rut"]', "16.222.333-4")
+        page.fill('input[name="nombre"]', "Laura Paz")
+        page.fill('input[name="email"]', "laura.paz@bootcamp.cl")
+        capturar(page, "registro_publico", "/registro")
+        page.click('form.tarjeta button[type="submit"]')
+        page.wait_for_load_state("networkidle")
+        capturar(page, "registro_exitoso", "/login?registro")
+
         page.fill('input[name="username"]', "admin")
         page.fill('input[name="password"]', "claveMala")
         page.click('button[type="submit"]')
@@ -92,6 +102,15 @@ def main():
 
         page.goto(f"{BASE}/evaluaciones", wait_until="networkidle")
         capturar(page, "evaluaciones", "/evaluaciones")
+
+        page.goto(f"{BASE}/evaluaciones/nueva", wait_until="networkidle")
+        page.select_option('select[name="estudianteId"]', index=0)
+        page.select_option('select[name="cursoId"]', index=1)
+        page.fill('input[name="nota"]', "6.3")
+        capturar(page, "evaluacion_formulario", "/evaluaciones/nueva")
+        page.click('form.tarjeta button[type="submit"]')
+        page.wait_for_load_state("networkidle")
+        capturar(page, "evaluacion_registrada", "/evaluaciones")
 
         page.goto(f"{BASE}/reportes", wait_until="networkidle")
         capturar(page, "reportes_jdbctemplate", "/reportes")

@@ -31,7 +31,7 @@ RestTemplate.
 | API | REST con respuestas JSON · interoperabilidad con **RestTemplate** |
 | Observabilidad | Actuator (`/actuator/health`) · log en `logs/` |
 | Gestor de dependencias | Maven (con Maven Wrapper incluido) · JaCoCo · JavaDoc |
-| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**35 pruebas**, cobertura 86 %) |
+| Pruebas | JUnit 5 + MockMvc + RestTemplate por HTTP real (**41 pruebas**, cobertura 86 %) |
 
 ## Cómo ejecutar
 
@@ -57,6 +57,8 @@ Abrir **http://localhost:8080** — redirige al login. Si el 8080 está ocupado:
 | `admin` | `admin123` | ADMIN | Todo, incluida la carga y eliminación de cursos |
 | `estudiante` | `est123` | USER | Consultar cursos, estudiantes, evaluaciones, reportes e integración |
 
+Además, cualquier persona puede **registrarse como estudiante** en `/registro` (público): crea su perfil académico; la credencial de acceso la entrega la Coordinación (usuarios en el properties, Lección 4).
+
 Los usuarios se **configuran en `application.properties`** (`edumanager.usuarios.*`). Al arrancar,
 `DatosIniciales` los lee y los guarda en la tabla `usuario` con la contraseña **hasheada con
 BCrypt**, nunca en texto plano. Cambiar una clave es editar una línea del archivo.
@@ -74,7 +76,7 @@ java -jar target/springedumanager-0.0.1-SNAPSHOT.jar
 Cada motor tiene su archivo `application-<motor>.properties` con URL, usuario y clave (también
 por variables `DB_URL`, `DB_USER`, `DB_PASSWORD`). Controladores, servicios, repositorios y vistas
 **no cambian**: solo cambia el `DataSource`. Verificado con H2 y con **MariaDB 12.3 real**: las
-mismas 53 comprobaciones HTTP pasan en los dos motores y las 5 tablas se crean solas.
+mismas comprobaciones HTTP pasan en los dos motores y las 5 tablas se crean solas.
 
 ---
 
@@ -86,14 +88,14 @@ src/main/java/cl/bootcamp/springedumanager/
 ├── repositorio/     Interfaces que extienden JpaRepository
 │   └── jdbc/        ReporteDao: reporte académico con JdbcTemplate y SQL directo
 ├── servicio/        Lógica de negocio con @Service y @Transactional
-├── controlador/     Controladores MVC (@Controller): cursos, estudiantes, páginas, reportes, integración
-├── rest/            Controladores REST (@RestController): cursos, estudiantes, auth (JWT) + ApiExceptionHandler
+├── controlador/     Controladores MVC (@Controller): cursos, estudiantes, evaluaciones, registro, reportes, integración
+├── rest/            Controladores REST (@RestController): cursos, estudiantes, evaluaciones (DTOs), auth (JWT) + ApiExceptionHandler
 ├── integracion/     CampusService (RestTemplate) y el servicio externo simulado del campus
 ├── seguridad/       SecurityConfig, UsuarioDetailsService, JwtService, JwtAuthenticationFilter
 └── config/          DatosIniciales (carga inicial) y RestClientConfig (@Bean RestTemplate)
 
 src/main/resources/
-├── templates/       Vistas Thymeleaf (cursos, estudiantes, evaluaciones, reportes, integracion, api-lab, login, 403)
+├── templates/       Vistas Thymeleaf (cursos, estudiantes, evaluaciones, registro, reportes, integracion, api-lab, login, 403)
 ├── static/          css/estilo.css · js/vendor/jquery-3.6.1.min.js
 ├── application.properties            configuración común, usuarios, JWT
 └── application-{h2,mariadb,mysql,postgresql}.properties   un DataSource por motor
@@ -103,15 +105,17 @@ src/test/java/cl/bootcamp/springedumanager/
 ├── ApiRestTemplateTest.java     CRUD completo consumido con RestTemplate por HTTP real — 8
 ├── JwtApiTest.java              Token JWT, Bearer válido/alterado, Basic sigue funcionando — 5
 ├── IntegracionYReportesTest.java  JdbcTemplate contra la base, RestTemplate contra los servicios — 4
+├── RegistroYEvaluacionesTest.java  Registro público, notas solo ADMIN, API de evaluaciones con DTOs — 6
 ├── CursoServiceTest.java        Lógica de negocio y consultas JPA — 5
 └── SpringEduManagerApplicationTests.java — 1
 
-postman/         Colección Postman: 18 peticiones con aserciones (Basic, JWT, interoperabilidad)
-CAPTURAS/        17 capturas del flujo + _GUION_CAPTURAS.md (qué muestra cada una)
+postman/         Colección Postman: 23 peticiones con aserciones (Basic, JWT, evaluaciones, interoperabilidad)
+CAPTURAS/        21 capturas del flujo + _GUION_CAPTURAS.md (qué muestra cada una)
 herramientas/    capturar_flujo.py — regenera las capturas recorriendo la app en Chrome
-pruebas_flujos.sh  53 comprobaciones HTTP sobre la aplicación corriendo
+pruebas_flujos.sh  63 comprobaciones HTTP sobre la aplicación corriendo
 DEPURACION.md    Revisión técnica: hallazgos con causa raíz y corrección
 GUIA_TEST_DE_USO.md  Guion del test de uso con una persona externa
+SUPUESTOS_ASUMIDOS.md  Decisiones que el enunciado dejaba abiertas y por qué se tomaron
 *.launch         Configuraciones de ejecución para Eclipse/STS (H2 y MariaDB)
 ```
 
@@ -140,7 +144,7 @@ starter web; equivale a `spring-boot-starter-web` de las versiones 2 y 3), `spri
 `spring-boot-starter-jdbc`, `spring-boot-starter-security`, `spring-boot-starter-thymeleaf`,
 `spring-boot-starter-validation`, `spring-boot-starter-actuator`, `jjwt` y los drivers de H2,
 MariaDB, MySQL y PostgreSQL. Plugins: Spring Boot, JaCoCo y JavaDoc. Ciclo de vida verificado
-desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 35 pruebas
+desde consola con `mvn clean`, `mvn install` y `mvn package` (el `install` corre las 41 pruebas
 antes de instalar el artefacto en el repositorio local).
 
 ```bash
@@ -151,7 +155,7 @@ mvn javadoc:javadoc             # documentación en target/site/apidocs/index.ht
 ### Etapa 2 — Spring MVC (Lección 2)
 Entidades `Estudiante` y `Curso` con sus controladores (`@Controller`, `@GetMapping`,
 `@PostMapping`) y vistas Thymeleaf (`th:each`, `th:if`, `th:field`, `th:action`, `th:href`).
-Formularios para ingresar estudiantes y cursos, y listados en pantalla. Los formularios validan
+Formularios para ingresar estudiantes y cursos (y evaluaciones), listados en pantalla, y un **registro público** de estudiantes (`/registro`, captura 02) que responde a la situación inicial. Los formularios validan
 en el servidor con Bean Validation y muestran el mensaje de error junto al campo (captura 06).
 Los controladores muestran las tres formas de entregar datos a la vista: `Model`, `ModelMap`
 (`ReporteController`) y `ModelAndView` (`IntegracionController`).
@@ -181,6 +185,8 @@ contraseñas BCrypt. Dos roles:
 | `/cursos`, `/estudiantes`, `/evaluaciones`, `/reportes`, `/integracion`, `/api-lab` (ver) | Sí | Sí |
 | `/cursos/nuevo`, `/cursos/guardar` (cargar cursos) | Sí | **403** |
 | `/cursos/eliminar/{id}` | Sí | **403** |
+| `/evaluaciones/nueva`, `/evaluaciones/guardar`, `/evaluaciones/eliminar/{id}` (registrar notas) | Sí | **403** |
+| `/registro` (registro público de estudiantes) | público | público |
 | `/api/**` | HTTP Basic **o** JWT Bearer | HTTP Basic **o** JWT Bearer |
 | `/api/auth/token`, `/demo/**`, `/actuator/health` | públicos | públicos |
 
@@ -201,7 +207,7 @@ intenta cargar cursos recibe una página de acceso denegado propia (captura 14).
 | PUT | `/api/cursos/{id}` | Actualizar | 200 / 404 · 409 si el código es de otro curso |
 | DELETE | `/api/cursos/{id}` | Eliminar | 204 / 404 |
 
-Los mismos cinco endpoints existen para `/api/estudiantes`. La API responde siempre en JSON,
+Los mismos cinco endpoints existen para `/api/estudiantes`. **`/api/evaluaciones`** (GET lista, GET `/{id}`, GET `/estudiante/{id}`, POST, DELETE) usa **DTOs** (`EvaluacionRequest` con ids, `EvaluacionResponse` plano con `aprobada`) en vez de la entidad, y responde 409 si el estudiante no está matriculado en el curso. La API responde siempre en JSON,
 incluidos los errores (`{"error": "...", "campos": {...}}`), y acepta dos formas de autenticación:
 
 ```bash
@@ -216,7 +222,7 @@ curl -H "Authorization: Bearer <token>" http://localhost:8080/api/cursos      # 
 Es autenticación *sin estado*: el servidor no guarda sesión. Un token alterado o vencido recibe 401.
 
 **Consumo validado de tres formas, como pide la lección:**
-- **Postman:** importar `postman/SpringEduManager.postman_collection.json` (File → Import). 18
+- **Postman:** importar `postman/SpringEduManager.postman_collection.json` (File → Import). 23
   peticiones con aserciones automáticas, incluida la carpeta *JWT* que pide el token y lo reutiliza.
 - **RestTemplate (cliente externo):** `ApiRestTemplateTest` y `JwtApiTest` levantan la aplicación
   en un puerto real y la consumen con `org.springframework.web.client.RestTemplate`.
@@ -273,7 +279,7 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 
 ## Verificación
 
-**Pruebas automáticas — 35, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
+**Pruebas automáticas — 41, todas en verde con `mvn install` (cobertura JaCoCo 86 %):**
 
 | Clase | Pruebas | Qué demuestra |
 |---|---|---|
@@ -281,10 +287,11 @@ CSRF respondía 405 en vez de la página de acceso denegado. Detalle en `DEPURAC
 | `ApiRestTemplateTest` | 8 | CRUD de cursos y estudiantes con `RestTemplate` por HTTP real · 400 con campos · 404 · 409 en POST y PUT · 401 sin credenciales |
 | `JwtApiTest` | 5 | Token con credenciales correctas · Bearer válido 200 · clave incorrecta 401 en JSON · token alterado 401 · Basic sigue funcionando |
 | `IntegracionYReportesTest` | 4 | Reporte JdbcTemplate cuadra con la carga inicial · RestTemplate consume el servicio simulado y la API propia · `/demo/**` y `/actuator/health` públicos |
+| `RegistroYEvaluacionesTest` | 6 | `/registro` público crea el estudiante y valida · USER 403 al registrar notas · ADMIN registra y la regla de matrícula rechaza · API de evaluaciones plana, 201/204/409/400 |
 | `CursoServiceTest` | 5 | Carga inicial · código/email repetido rechazado · `@Query` filtra y ordena · matricular no duplica |
 | `SpringEduManagerApplicationTests` | 1 | El contexto arranca |
 
-**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 53 comprobaciones HTTP, 53 OK en H2 y 53 OK en MariaDB:**
+**Sobre la aplicación corriendo — `pruebas_flujos.sh`, 63 comprobaciones HTTP, 63 OK en H2 (53 OK en MariaDB con la versión previa del guion):**
 
 ```
 /cursos sin sesión                302  → redirige al login
@@ -296,6 +303,9 @@ POST /api/auth/token              200  → JWT de 3 partes · 401 en JSON con cl
 GET /api/cursos con Bearer        200  → y 401 con el token alterado
 POST /api/cursos                  201  → creado · 400 con campos · 409 código repetido
 PUT / DELETE /api/cursos/{id}     200 / 204
+/registro                         200  → público; POST crea y redirige a /login?registro
+/evaluaciones/nueva               200 ADMIN · 403 USER; nota a no matriculado vuelve al formulario
+GET /api/evaluaciones             200  → DTO plano; POST sin matrícula 409
 /integracion, /reportes, /api-lab 200  → con sesión; 302 sin sesión
 /demo/campus/calendario · /actuator/health   200 públicos
 logout                            302  → /login?logout, y /cursos vuelve a pedir login
@@ -306,5 +316,5 @@ bash pruebas_flujos.sh                      # contra http://localhost:8080
 bash pruebas_flujos.sh http://localhost:8095
 ```
 
-Las 17 capturas del flujo están en `CAPTURAS/`, con `_GUION_CAPTURAS.md` explicando qué muestra
+Las 21 capturas del flujo están en `CAPTURAS/`, con `_GUION_CAPTURAS.md` explicando qué muestra
 cada una y a qué lección responde.

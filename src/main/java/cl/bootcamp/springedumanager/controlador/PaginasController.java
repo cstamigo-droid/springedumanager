@@ -1,19 +1,11 @@
 package cl.bootcamp.springedumanager.controlador;
 
-import cl.bootcamp.springedumanager.servicio.EvaluacionService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class PaginasController {
-
-    private final EvaluacionService evaluacionService;
-
-    public PaginasController(EvaluacionService evaluacionService) {
-        this.evaluacionService = evaluacionService;
-    }
 
     @GetMapping("/login")
     public String login() { return "login"; }
@@ -35,9 +27,4 @@ public class PaginasController {
     @GetMapping("/api-lab")
     public String apiLab() { return "api-lab"; }
 
-    @GetMapping("/evaluaciones")
-    public String evaluaciones(Model model) {
-        model.addAttribute("evaluaciones", evaluacionService.listar());
-        return "evaluaciones/lista";
-    }
 }

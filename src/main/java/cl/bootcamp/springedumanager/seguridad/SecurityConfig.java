@@ -27,7 +27,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
  *   /api/auth/token                 -> publico (entrega el JWT)
  *   /api/**                         -> autenticado con HTTP Basic o con JWT Bearer,
  *                                      sin formulario ni redirecciones
- *   /login, /css/**, /js/**, /h2-console, /demo/**, /actuator/health -> publicos
+ *   /evaluaciones/nueva, /guardar, /eliminar -> solo ADMIN (registrar notas)
+ *   /login, /registro, /css/**, /js/**, /h2-console, /demo/**, /actuator/health -> publicos
  */
 @Configuration
 @EnableWebSecurity
@@ -83,9 +84,10 @@ public class SecurityConfig {
                 // por esta cadena y, si exige autenticacion, sobrescribe el 401 con un
                 // 302 al login. Era la causa real del hallazgo 1 (ver DEPURACION.md).
                 // /demo/** simula un servicio externo del campus (interoperabilidad).
-                .requestMatchers("/login", "/error", "/css/**", "/js/**", "/h2-console/**",
+                .requestMatchers("/login", "/registro", "/error", "/css/**", "/js/**", "/h2-console/**",
                                  "/demo/**", "/actuator/health").permitAll()
-                .requestMatchers("/cursos/nuevo", "/cursos/guardar", "/cursos/eliminar/**").hasRole("ADMIN")
+                .requestMatchers("/cursos/nuevo", "/cursos/guardar", "/cursos/eliminar/**",
+                                 "/evaluaciones/nueva", "/evaluaciones/guardar", "/evaluaciones/eliminar/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .formLogin(f -> f
                 .loginPage("/login")

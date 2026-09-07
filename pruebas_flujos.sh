@@ -103,6 +103,21 @@ chk "GET /api-lab con sesion" 200 "$(curl -s -b $J -o /dev/null -w %{http_code} 
 chk "GET /integracion sin sesion redirige" 302 "$(curl -s -o /dev/null -w %{http_code} $B/integracion)"
 chk "/actuator/health responde UP" "SI" "$(curl -s $B/actuator/health | grep -q UP && echo SI || echo NO)"
 
+echo "--- 8d. Registro publico y evaluaciones ---"
+chk "GET /registro sin sesion es publico" 200 "$(curl -s -c $DIR/jr -o $DIR/reg.html -w %{http_code} $B/registro)"
+TR=$(csrf $DIR/reg.html); EM="nuevo$(date +%s | tail -c 5)@bootcamp.cl"
+chk "POST /registro crea y redirige a /login?registro" "$B/login?registro" "$(curl -s -b $DIR/jr -o /dev/null -w %{redirect_url} -d "nombre=Estudiante+Nuevo&email=$EM&rut=$(date +%s | tail -c 8)-1&_csrf=$TR" $B/registro)"
+chk "el nuevo estudiante aparece en la API" "SI" "$(curl -s -u admin:admin123 $B/api/estudiantes | grep -q "$EM" && echo SI || echo NO)"
+chk "ADMIN abre /evaluaciones/nueva" 200 "$(curl -s -b $J -o $DIR/evf.html -w %{http_code} $B/evaluaciones/nueva)"
+chk "USER NO abre /evaluaciones/nueva (403)" 403 "$(curl -s -b $JU -o /dev/null -w %{http_code} $B/evaluaciones/nueva)"
+TE=$(csrf $DIR/evf.html)
+chk "ADMIN registra una nota -> redirige a /evaluaciones" "$B/evaluaciones" "$(curl -s -b $J -o /dev/null -w %{redirect_url} -d "estudianteId=1&cursoId=1&nota=6.2&_csrf=$TE" $B/evaluaciones/guardar)"
+chk "nota a un no matriculado -> vuelve al formulario" "$B/evaluaciones/nueva" "$(curl -s -b $J -o /dev/null -w %{redirect_url} -d "estudianteId=2&cursoId=1&nota=6.2&_csrf=$TE" $B/evaluaciones/guardar)"
+chk "GET /api/evaluaciones (DTO plano) -> 200" 200 "$(curl -s -u admin:admin123 -o $DIR/ev.json -w %{http_code} $B/api/evaluaciones)"
+chk "el JSON de evaluaciones trae 'aprobada' y no anida entidades" "SI" "$(grep -q '"aprobada"' $DIR/ev.json && ! grep -q '"cursos"' $DIR/ev.json && echo SI || echo NO)"
+printf '{"estudianteId":2,"cursoId":1,"nota":5.0}' > $DIR/evmal.json
+chk "POST /api/evaluaciones sin matricula -> 409" 409 "$(curl -s -u admin:admin123 -o /dev/null -w %{http_code} -H 'Content-Type: application/json' --data-binary @$DIR/evmal.json $B/api/evaluaciones)"
+
 echo "--- 9. Cierre de sesion ---"
 curl -s -b $J $B/cursos -o /tmp/c.html; T=$(csrf /tmp/c.html)
 LOC=$(curl -s -b $J -c $J -o /dev/null -w %{redirect_url} -d "_csrf=$T" $B/logout)

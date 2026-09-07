@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head><meta charset="UTF-8"><title>Evaluaciones</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
 <body>
   <div th:replace="~{fragmentos :: cabecera}"></div>
   <main>
     <h2>Evaluaciones</h2>
+    <div th:if="${exito}" class="aviso ok" th:text="${exito}"></div>
+    <div th:if="${error}" class="aviso mal" th:text="${error}"></div>
+    <p sec:authorize="hasRole('ADMIN')"><a class="btn" th:href="@{/evaluaciones/nueva}">Registrar evaluacion</a></p>
     <table>
-      <tr><th>Estudiante</th><th>Curso</th><th>Nota</th><th>Fecha</th><th>Estado</th></tr>
+      <tr><th>Estudiante</th><th>Curso</th><th>Nota</th><th>Fecha</th><th>Estado</th><th sec:authorize="hasRole('ADMIN')"></th></tr>
       <tr th:each="ev : ${evaluaciones}">
         <td th:text="${ev.estudiante.nombre}"></td>
         <td th:text="${ev.curso.nombre}"></td>
@@ -14,8 +17,13 @@
         <td th:text="${ev.fecha}"></td>
         <td th:text="${ev.aprobada} ? 'Aprobada' : 'Reprobada'"
             th:style="${ev.aprobada} ? 'color:#256d47' : 'color:#96342b'"></td>
+        <td sec:authorize="hasRole('ADMIN')">
+          <form th:action="@{'/evaluaciones/eliminar/' + ${ev.id}}" method="post" style="display:inline">
+            <button class="btn rojo" type="submit">Eliminar</button>
+          </form>
+        </td>
       </tr>
-      <tr th:if="${#lists.isEmpty(evaluaciones)}"><td colspan="5">No hay evaluaciones registradas.</td></tr>
+      <tr th:if="${#lists.isEmpty(evaluaciones)}"><td colspan="6">No hay evaluaciones registradas.</td></tr>
     </table>
   </main>
 </body>

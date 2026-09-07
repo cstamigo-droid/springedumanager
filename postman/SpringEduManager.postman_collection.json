@@ -292,6 +292,117 @@
       ]
     },
     {
+      "name": "Evaluaciones (DTOs)",
+      "item": [
+        {
+          "name": "GET listar evaluaciones",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/evaluaciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 y plano', () => { pm.response.to.have.status(200); pm.expect(pm.response.json()[0]).to.have.property('aprobada'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET evaluaciones de un estudiante",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/evaluaciones/estudiante/1"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST registrar nota",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/evaluaciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 1,\n  \"cursoId\": 2,\n  \"nota\": 6.8\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('evaluacionId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST nota a un no matriculado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base}}/api/evaluaciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 2,\n  \"cursoId\": 1,\n  \"nota\": 5.0\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE eliminar evaluacion",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base}}/api/evaluaciones/{{evaluacionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Seguridad",
       "item": [
         {

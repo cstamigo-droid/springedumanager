@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Nueva evaluacion</title><link rel="stylesheet" th:href="@{/css/estilo.css}"></head>
+<body>
+  <div th:replace="~{fragmentos :: cabecera}"></div>
+  <main>
+    <h2>Registrar una evaluacion</h2>
+    <div th:if="${error}" class="aviso mal" th:text="${error}"></div>
+    <form class="tarjeta" th:action="@{/evaluaciones/guardar}" method="post">
+      <label>Estudiante
+        <select name="estudianteId">
+          <option th:each="e : ${estudiantes}" th:value="${e.id}" th:text="${e.rut + ' - ' + e.nombre}"></option>
+        </select>
+      </label>
+      <label>Curso
+        <select name="cursoId">
+          <option th:each="c : ${cursos}" th:value="${c.id}" th:text="${c.codigo + ' - ' + c.nombre}"></option>
+        </select>
+      </label>
+      <label>Nota (1.0 a 7.0) <input type="number" name="nota" step="0.1" min="1" max="7" value="4.0" required></label>
+      <button class="btn" type="submit">Guardar</button>
+      <a class="btn gris" th:href="@{/evaluaciones}">Cancelar</a>
+    </form>
+    <p>Regla academica: solo se puede evaluar a un estudiante en un curso en el que esta matriculado.</p>
+  </main>
+</body>
+</html>

@@ -282,3 +282,17 @@ test usa `JdkClientHttpRequestFactory` (java.net.http). El servidor estaba bien;
 
 Y una tercera, vieja conocida: el guion `pruebas_flujos.sh` extraía el JWT con el Python de
 Windows sobre una ruta `/tmp` de Git Bash — la misma falla del 22-ago, ahora sin Python (`grep`).
+
+### Y contra el solucionario en 4 niveles (mismo dia, mas tarde)
+
+Con el zip `entrega-final-springedumanager-m6.zip` en mano se cotejo nivel por nivel. Dos cosas
+que el profesor implementa en LOS CUATRO niveles y aqui faltaban: el **registro publico de
+estudiantes** (`/registro`, porque la situacion inicial dice "que los estudiantes puedan
+registrarse") y **evaluaciones con alta** (nosotros solo listabamos). Se agregaron: `/registro`
+(publico, crea el perfil; la credencial sigue en el properties, como el mismo lo asume en su
+`SUPUESTOS_ASUMIDOS.md`), `/evaluaciones/nueva` solo ADMIN con la regla "solo a matriculados", y
+`/api/evaluaciones` con **DTOs** de entrada y salida (el salto junior -> middle de su comparacion).
+Verificado: 41 pruebas, 63 comprobaciones HTTP, 21 capturas sin repetidas. Lo que el tiene y aqui
+no: prefijo `/api/v1/`, Problem Details, `docker-compose` para las bases, y en *senior* auditoria y
+bloqueo optimista. Se dejan fuera a proposito: no los pide la pauta y cambiar el prefijo romperia
+la coleccion Postman, el guion y las capturas ya verificadas.

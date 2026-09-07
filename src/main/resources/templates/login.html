@@ -10,11 +10,13 @@
     <h2>SpringEduManager</h2>
     <div th:if="${param.error}" class="aviso mal">Usuario o contrasena incorrectos.</div>
     <div th:if="${param.logout}" class="aviso ok">Sesion cerrada correctamente.</div>
+    <div th:if="${param.registro}" class="aviso ok">Registro exitoso. La Coordinacion te entregara tu usuario y contrasena.</div>
     <form class="tarjeta" th:action="@{/login}" method="post">
       <label>Usuario <input type="text" name="username" required autofocus></label>
       <label>Contrasena <input type="password" name="password" required></label>
       <button class="btn" type="submit">Ingresar</button>
     </form>
+    <p>¿Eres estudiante nuevo? <a th:href="@{/registro}">Registrate aqui</a>.</p>
   </main>
 </body>
 </html>

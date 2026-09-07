@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>SpringEduManager — Registro</title>
+  <link rel="stylesheet" th:href="@{/css/estilo.css}">
+</head>
+<body>
+  <main class="login">
+    <h2>Registro de estudiante</h2>
+    <p>Crea tu perfil academico en la plataforma. El acceso con usuario y contrasena lo entrega la Coordinacion.</p>
+    <div th:if="${error}" class="aviso mal" th:text="${error}"></div>
+    <form class="tarjeta" th:action="@{/registro}" th:object="${estudiante}" method="post">
+      <label>RUT <input type="text" th:field="*{rut}">
+        <span class="error" th:if="${#fields.hasErrors('rut')}" th:errors="*{rut}"></span></label>
+      <label>Nombre <input type="text" th:field="*{nombre}">
+        <span class="error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span></label>
+      <label>Email <input type="text" th:field="*{email}">
+        <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span></label>
+      <button class="btn" type="submit">Registrarme</button>
+      <a class="btn gris" th:href="@{/login}">Volver al ingreso</a>
+    </form>
+  </main>
+</body>
+</html>
