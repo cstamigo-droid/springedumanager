@@ -3,9 +3,21 @@
 Aplicación web educativa para gestionar **estudiantes, cursos y evaluaciones** de un bootcamp
 de programación.
 
-**Proyecto de evaluación del Módulo 6 — Desarrollo de aplicaciones JEE con Spring Framework**
-Bootcamp Desarrollo Full Stack Java Trainee · Autor: **Cristian Amigo**
-Repositorio: https://github.com/cstamigo-droid/springedumanager
+Reemplaza la gestión con planillas sueltas por una plataforma única, con **API REST** (HTTP Basic
+o **JWT**) para integrarse con otros sistemas del campus.
+
+### Qué demuestra este proyecto
+
+| | |
+|---|---|
+| **Spring completo** | Boot + MVC + Data JPA + Security, con autorización por rol verificada de punta a punta |
+| **Dos vías de acceso** | Interfaz web con sesión y API REST con JWT sobre el mismo dominio |
+| **Pruebas** | 42 pruebas; 63 comprobaciones HTTP ejecutadas contra H2 y contra MariaDB real |
+| **Persistencia intercambiable** | Perfiles por `DB_ENGINE`: el mismo código corre sobre H2 o MariaDB |
+| **Probado por un usuario real** | Se expuso con un túnel y lo usó alguien ajeno al proyecto; de ahí salió un fallo que ninguna prueba había detectado |
+
+> Desarrollado como proyecto evaluado del Módulo 6 (Desarrollo de aplicaciones JEE con Spring
+> Framework) del bootcamp Full Stack Java Trainee. Autor: Cristian Amigo.
 
 ---
 
